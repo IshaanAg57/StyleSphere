@@ -5,8 +5,12 @@ import {
   getTrendingProducts,
   getProductBySlug
 } from '../controllers/productController.js';
+import reviewRoutes from './reviewRoutes.js';
 
 const router = express.Router();
+
+// Mount nested review routes
+router.use('/:productId/reviews', reviewRoutes);
 
 // 1. List Products with query/filters/pagination
 router.get('/', getProducts);

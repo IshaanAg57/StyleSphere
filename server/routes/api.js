@@ -7,6 +7,9 @@ import cartRoutes from './cartRoutes.js';
 import wishlistRoutes from './wishlistRoutes.js';
 import addressRoutes from './addressRoutes.js';
 import orderRoutes from './orderRoutes.js';
+import reviewRoutes from './reviewRoutes.js';
+import adminRoutes from './adminRoutes.js';
+import paymentRoutes from './paymentRoutes.js';
 
 const router = express.Router();
 
@@ -19,8 +22,11 @@ router.use('/cart', cartRoutes);
 router.use('/wishlist', wishlistRoutes);
 router.use('/addresses', addressRoutes);
 router.use('/orders', orderRoutes);
+router.use('/reviews', reviewRoutes);
+router.use('/admin', adminRoutes);
+router.use('/payment', paymentRoutes);
 
-// Root /api endpoint information
+// Root /api endpoint documentation
 router.get('/', (req, res) => {
   res.json({
     name: 'StyleSphere REST API',
@@ -32,40 +38,42 @@ router.get('/', (req, res) => {
       auth: {
         register: 'POST /api/auth/register',
         login: 'POST /api/auth/login',
-        me: 'GET /api/auth/me (Protected)'
+        me: 'GET /api/auth/me (Protected)',
+        updateProfile: 'PATCH /api/auth/profile (Protected)',
+        changePassword: 'PATCH /api/auth/change-password (Protected)'
       },
       products: {
-        list: 'GET /api/products?q=&category=&gender=&minPrice=&maxPrice=&size=&color=&sort=&page=&limit=',
+        list: 'GET /api/products',
         featured: 'GET /api/products/featured',
         trending: 'GET /api/products/trending',
-        details: 'GET /api/products/:slug'
+        details: 'GET /api/products/:slug',
+        reviews: 'GET /api/products/:productId/reviews',
+        submitReview: 'POST /api/products/:productId/reviews (Protected - Verified Purchase)'
       },
-      categories: {
-        list: 'GET /api/categories',
-        details: 'GET /api/categories/:slug'
-      },
-      cart: {
-        get: 'GET /api/cart (Protected)',
-        add: 'POST /api/cart (Protected)',
-        updateItem: 'PATCH /api/cart/:itemId (Protected)',
-        removeItem: 'DELETE /api/cart/:itemId (Protected)',
-        clear: 'DELETE /api/cart (Protected)'
-      },
-      wishlist: {
-        get: 'GET /api/wishlist (Protected)',
-        add: 'POST /api/wishlist/:productId (Protected)',
-        remove: 'DELETE /api/wishlist/:productId (Protected)'
-      },
-      addresses: {
-        list: 'GET /api/addresses (Protected)',
-        add: 'POST /api/addresses (Protected)',
-        update: 'PATCH /api/addresses/:addressId (Protected)',
-        delete: 'DELETE /api/addresses/:addressId (Protected)'
-      },
+      categories: '/api/categories',
+      cart: '/api/cart',
+      wishlist: '/api/wishlist',
+      addresses: '/api/addresses',
       orders: {
         create: 'POST /api/orders (Protected)',
         list: 'GET /api/orders (Protected)',
-        details: 'GET /api/orders/:orderId (Protected)'
+        details: 'GET /api/orders/:orderId (Protected)',
+        invoice: 'GET /api/orders/:orderId/invoice (Protected)'
+      },
+      payment: {
+        config: 'GET /api/payment/config',
+        details: 'GET /api/payment/:orderId (Protected)',
+        confirm: 'POST /api/payment/:orderId/confirm (Protected)'
+      },
+      reviews: '/api/reviews',
+      admin: {
+        dashboard: 'GET /api/admin/dashboard (Admin)',
+        products: 'GET, POST, PATCH, DELETE /api/admin/products (Admin)',
+        categories: 'GET, POST, PATCH, DELETE /api/admin/categories (Admin)',
+        orders: 'GET, PATCH /api/admin/orders (Admin)',
+        customers: 'GET /api/admin/customers (Admin)',
+        inventory: 'GET, PATCH /api/admin/inventory (Admin)',
+        payments: 'GET, PATCH /api/admin/payments (Admin)'
       }
     }
   });
