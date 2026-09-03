@@ -7,7 +7,24 @@ const autoSeedIfEmpty = async () => {
   try {
     const Product = (await import('../models/Product.js')).default;
     const Category = (await import('../models/Category.js')).default;
+    const User = (await import('../models/User.js')).default;
 
+    // 1. Seed Admin User if not exists
+    const adminEmail = 'admin@stylesphere.fashion';
+    const existingAdmin = await User.findOne({ email: adminEmail });
+    if (!existingAdmin) {
+      console.log('👑 [Auto-Seeder]: Creating default Executive Admin account...');
+      await User.create({
+        name: 'StyleSphere Executive Admin',
+        email: adminEmail,
+        password: 'AdminSecret2026',
+        role: 'admin',
+        profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=400&q=80'
+      });
+      console.log('✅ [Auto-Seeder]: Admin account initialized (admin@stylesphere.fashion)');
+    }
+
+    // 2. Seed Catalog
     const count = await Product.countDocuments();
     if (count === 0) {
       console.log('📦 [Auto-Seeder]: Populating initial luxury catalog...');
