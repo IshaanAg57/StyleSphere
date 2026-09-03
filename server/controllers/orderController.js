@@ -107,7 +107,7 @@ export const createOrder = asyncHandler(async (req, res) => {
       country: shippingAddress.country || 'India'
     },
     paymentMethod,
-    paymentStatus: paymentMethod === 'COD' || paymentMethod === 'Cash on Delivery' ? 'pending' : 'paid',
+    paymentStatus: paymentMethod === 'COD' || paymentMethod === 'Cash on Delivery' ? 'cash_on_delivery' : 'pending',
     orderStatus: 'confirmed',
     subtotal,
     discount,
@@ -115,8 +115,8 @@ export const createOrder = asyncHandler(async (req, res) => {
     shipping: shippingCost,
     tax,
     totalAmount,
-    isPaid: paymentMethod !== 'COD' && paymentMethod !== 'Cash on Delivery',
-    paidAt: paymentMethod !== 'COD' && paymentMethod !== 'Cash on Delivery' ? new Date() : null,
+    isPaid: false,
+    paidAt: null,
     statusHistory: [
       {
         status: 'Order Placed',

@@ -124,7 +124,6 @@ export const login = asyncHandler(async (req, res) => {
  * @access  Private (Protected by JWT)
  */
 export const getMe = asyncHandler(async (req, res) => {
-  // req.user is attached by the protect middleware
   const user = await User.findById(req.user._id);
 
   if (!user) {
@@ -139,4 +138,83 @@ export const getMe = asyncHandler(async (req, res) => {
     'User profile retrieved successfully',
     200
   );
+});
+
+/**
+ * @desc    Update user profile details
+ * @route   PATCH /api/auth/profile
+ * @access  Private
+ */
+export const updateProfile = asyncHandler(async (req, res) => {
+  const { name, email, phone, profileImage } = req.body;
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    return ApiResponse.error(res, 'User not found', 404);
+  }
+
+  if (name) user.name = name.trim();
+  if (phone !== undefined) user.phone = phone.trim();
+  if (profileImage) user.profileImage = profileImage;
+
+  if (email && email.trim().toLowerCase() !== user.email) {
+    const normalizedEmail = email.trim().toLowerCase();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(normalizedEmail)) {
+      return ApiResponse.error(res, 'Please provide a valid email address', 400);
+    }
+
+    const emailInUse = await User.findOne({ email: normalizedEmail });
+    if (emailInUse) {
+      return ApiResponse.error(res, 'This email address is already in use by another account', 400);
+    }
+    user.email = normalizedEmail;
+  }
+
+  await user.save();
+
+  return ApiResponse.success(
+    res,
+    {
+      user: formatSafeUser(user)
+    },
+    'Profile updated successfully',
+    200
+  );
+});
+
+/**
+ * @desc    Change user password securely
+ * @route   PATCH /api/auth/change-password
+ * @access  Private
+ */
+export const changePassword = asyncHandler(async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  if (!currentPassword || !newPassword) {
+    return ApiResponse.error(res, 'Please provide current and new password', 400);
+  }
+
+  if (newPassword.length < 6) {
+    return ApiResponse.error(res, 'New password must be at least 6 characters long', 400);
+  }
+
+  if (confirmPassword !== undefined && newPassword !== confirmPassword) {
+    return ApiResponse.error(res, 'New passwords do not match', 400);
+  }
+
+  const user = await User.findById(req.user._id).select('+password');
+  if (!user) {
+    return ApiResponse.error(res, 'User not found', 404);
+  }
+
+  const isMatch = await user.matchPassword(currentPassword);
+  if (!isMatch) {
+    return ApiResponse.error(res, 'Incorrect current password', 401);
+  }
+
+  user.password = newPassword;
+  await user.save();
+
+  return ApiResponse.success(res, null, 'Password updated successfully', 200);
 });
