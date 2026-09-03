@@ -50,8 +50,50 @@ const orderSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ['pending', 'paid', 'failed', 'refunded', 'Pending', 'Completed', 'Failed', 'Refunded'],
+      enum: [
+        'pending',
+        'pending_verification',
+        'paid',
+        'failed',
+        'rejected',
+        'refunded',
+        'cash_on_delivery',
+        'Pending',
+        'Completed',
+        'Failed',
+        'Refunded'
+      ],
       default: 'pending'
+    },
+    paymentReference: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    paymentApp: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    paymentNote: {
+      type: String,
+      trim: true,
+      default: ''
+    },
+    paymentSubmittedAt: {
+      type: Date
+    },
+    paymentVerifiedAt: {
+      type: Date
+    },
+    paymentVerifiedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    paymentRejectionReason: {
+      type: String,
+      trim: true,
+      default: ''
     },
     paymentResult: {
       id: String,
