@@ -12,23 +12,32 @@ import {
   Clock,
   Truck,
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  FileText,
+  AlertCircle,
+  XCircle,
+  ExternalLink,
+  QrCode
 } from 'lucide-react';
 
 const ORDER_STEPS = [
   { label: 'Order Placed', key: 'placed' },
+  { label: 'Payment Settlement', key: 'payment' },
   { label: 'Confirmed', key: 'confirmed' },
   { label: 'Processing', key: 'processing' },
   { label: 'Shipped', key: 'shipped' },
   { label: 'Delivered', key: 'delivered' }
 ];
 
-const getActiveStepIndex = (status) => {
-  const norm = status ? status.toLowerCase() : 'confirmed';
-  if (norm.includes('delivered')) return 4;
-  if (norm.includes('shipped') || norm.includes('delivery')) return 3;
-  if (norm.includes('processing')) return 2;
-  if (norm.includes('confirmed')) return 1;
+const getActiveStepIndex = (order) => {
+  const status = order?.orderStatus?.toLowerCase() || 'confirmed';
+  const payStatus = order?.paymentStatus?.toLowerCase() || 'pending';
+
+  if (status.includes('delivered')) return 5;
+  if (status.includes('shipped') || status.includes('delivery')) return 4;
+  if (status.includes('processing')) return 3;
+  if (status.includes('confirmed') && (order?.isPaid || payStatus === 'paid' || payStatus === 'cash_on_delivery')) return 2;
+  if (payStatus === 'pending_verification' || payStatus === 'paid' || payStatus === 'cash_on_delivery') return 1;
   return 0;
 };
 
@@ -86,7 +95,7 @@ export const OrderDetailsPage = () => {
     );
   }
 
-  const activeStepIdx = getActiveStepIndex(activeOrder.orderStatus);
+  const activeStepIdx = getActiveStepIndex(activeOrder);
 
   return (
     <div className="min-h-screen bg-slate-950 py-12 px-4 sm:px-6 lg:px-8">
@@ -118,7 +127,18 @@ export const OrderDetailsPage = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Download Tax Invoice Button */}
+            <a
+              href={`/api/orders/${activeOrder._id || activeOrder.orderNumber}/invoice?format=html`}
+              target="_blank"
+              rel="noreferrer"
+              className="py-2.5 px-4 rounded-xl glass-panel border border-slate-700 hover:border-amber-400 text-xs font-semibold text-slate-200 hover:text-white flex items-center gap-2 shadow-md transition-colors"
+            >
+              <FileText className="w-4 h-4 text-amber-400" />
+              <span>Download Invoice</span>
+            </a>
+
             <span className="px-3.5 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-300 font-bold text-xs uppercase tracking-wider">
               Status: {activeOrder.orderStatus}
             </span>
@@ -161,7 +181,7 @@ export const OrderDetailsPage = () => {
                     )}
                   </div>
                   <span
-                    className={`text-[11px] font-semibold mt-2 hidden sm:block ${
+                    className={`text-[10px] sm:text-[11px] font-semibold mt-2 text-center max-w-[70px] ${
                       isCurrent ? 'text-amber-400' : isCompleted ? 'text-white' : 'text-slate-500'
                     }`}
                   >
@@ -177,7 +197,7 @@ export const OrderDetailsPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
           
           {/* LEFT: Items List */}
-          <div className="lg:col-span-8 space-y-4">
+          <div className="lg:col-span-8 space-y-6">
             <div className="p-6 sm:p-8 rounded-3xl glass-card border border-slate-800 space-y-6">
               <h2 className="text-lg font-bold text-white font-serif tracking-tight border-b border-slate-800 pb-4">
                 Ordered Garments & Pieces ({activeOrder.items?.length || 0})
@@ -223,7 +243,7 @@ export const OrderDetailsPage = () => {
               </div>
             </div>
 
-            {/* Delivery & Payment Details Card */}
+            {/* Delivery & Payment Architecture Card */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               {/* Delivery Address */}
               <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-3">
@@ -245,26 +265,62 @@ export const OrderDetailsPage = () => {
                 </div>
               </div>
 
-              {/* Payment Details */}
-              <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-3">
-                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400 border-b border-slate-800 pb-3">
-                  <CreditCard className="w-4 h-4" />
-                  <span>Payment Architecture</span>
+              {/* Payment Architecture & Status */}
+              <div className="p-6 rounded-3xl glass-card border border-slate-800 space-y-3 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-amber-400 border-b border-slate-800 pb-3">
+                    <CreditCard className="w-4 h-4" />
+                    <span>Payment Architecture</span>
+                  </div>
+                  <div className="text-xs text-slate-300 space-y-2 pt-2">
+                    <div className="flex justify-between">
+                      <span className="text-slate-400">Method:</span>
+                      <span className="font-semibold text-white uppercase">{activeOrder.paymentMethod}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-slate-400">Payment Status:</span>
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                        activeOrder.paymentStatus === 'paid'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30'
+                          : activeOrder.paymentStatus === 'pending_verification'
+                          ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                          : activeOrder.paymentStatus === 'rejected'
+                          ? 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+                          : 'bg-slate-800 text-slate-300'
+                      }`}>
+                        {activeOrder.paymentStatus === 'pending_verification'
+                          ? 'Verification Pending'
+                          : activeOrder.paymentStatus}
+                      </span>
+                    </div>
+
+                    {activeOrder.paymentReference && (
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">UTR / Ref:</span>
+                        <span className="font-mono text-amber-300 font-semibold">{activeOrder.paymentReference}</span>
+                      </div>
+                    )}
+
+                    {activeOrder.paymentRejectionReason && (
+                      <div className="p-2.5 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-300 text-[11px]">
+                        <strong>Rejection Reason:</strong> {activeOrder.paymentRejectionReason}
+                      </div>
+                    )}
+                  </div>
                 </div>
-                <div className="text-xs text-slate-300 space-y-1.5">
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Method:</span>
-                    <span className="font-semibold text-white uppercase">{activeOrder.paymentMethod}</span>
+
+                {/* Complete Payment Button for pending / rejected UPI orders */}
+                {(activeOrder.paymentMethod === 'UPI' && (activeOrder.paymentStatus === 'pending' || activeOrder.paymentStatus === 'rejected')) && (
+                  <div className="pt-3 border-t border-slate-800">
+                    <Link
+                      to={`/payment/${activeOrder._id || activeOrder.orderNumber}`}
+                      className="w-full py-2.5 px-4 rounded-xl gold-gradient-btn text-xs font-bold uppercase flex items-center justify-center gap-2 shadow-md"
+                    >
+                      <QrCode className="w-4 h-4" />
+                      <span>{activeOrder.paymentStatus === 'rejected' ? 'Resubmit UPI Payment' : 'Complete UPI Payment'}</span>
+                    </Link>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Payment Status:</span>
-                    <span className="font-semibold text-emerald-400 uppercase">{activeOrder.paymentStatus}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-400">Invoice:</span>
-                    <span className="font-mono text-amber-400">INV-{activeOrder.orderNumber}</span>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           </div>
@@ -318,10 +374,19 @@ export const OrderDetailsPage = () => {
                 </div>
               </div>
 
-              <div className="pt-2">
+              <div className="space-y-2 pt-2">
+                <a
+                  href={`/api/orders/${activeOrder._id || activeOrder.orderNumber}/invoice?format=html`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="w-full py-3 px-6 rounded-2xl glass-panel border border-slate-700 text-xs font-bold uppercase tracking-wider text-center text-slate-200 hover:text-white flex items-center justify-center gap-2"
+                >
+                  <FileText className="w-4 h-4 text-amber-400" />
+                  <span>Download Tax Invoice</span>
+                </a>
                 <Link
                   to="/shop"
-                  className="w-full py-3.5 px-6 rounded-2xl gold-gradient-btn text-xs font-bold uppercase tracking-wider text-center block shadow-lg"
+                  className="w-full py-3 px-6 rounded-2xl gold-gradient-btn text-xs font-bold uppercase tracking-wider text-center block shadow-lg"
                 >
                   Explore Runway Catalog
                 </Link>

@@ -5,6 +5,7 @@ import { fetchProductBySlug, clearSelectedProduct } from '../store/slices/produc
 import { addToCart } from '../store/slices/cartSlice';
 import { toggleWishlist } from '../store/slices/wishlistSlice';
 import ProductCard from '../components/common/ProductCard';
+import ProductReviews from '../components/reviews/ProductReviews';
 import {
   Star,
   Heart,
@@ -483,6 +484,9 @@ export const ProductDetailsPage = () => {
           </div>
 
         </div>
+
+        {/* Product Reviews & Ratings Section */}
+        <ProductReviews productId={selectedProduct._id} />
 
         {/* Related Products Section */}
         {relatedProducts && relatedProducts.length > 0 && (

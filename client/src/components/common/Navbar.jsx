@@ -325,6 +325,17 @@ export const Navbar = () => {
                   <span className="text-[10px] text-amber-400 font-bold uppercase">{user?.role}</span>
                 </Link>
 
+                {user?.role === 'admin' && (
+                  <Link
+                    to="/admin"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl gold-gradient-btn text-xs font-bold text-slate-950"
+                  >
+                    <LayoutDashboard className="w-4 h-4" />
+                    <span>Executive Admin Portal</span>
+                  </Link>
+                )}
+
                 <button
                   onClick={handleLogout}
                   className="flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-xl border border-rose-500/30 text-rose-300 bg-rose-500/10 text-xs font-semibold"

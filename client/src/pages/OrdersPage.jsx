@@ -11,7 +11,10 @@ import {
   Sparkles,
   Truck,
   CheckCircle2,
-  Clock
+  Clock,
+  QrCode,
+  FileText,
+  AlertCircle
 } from 'lucide-react';
 
 const getStatusBadge = (status) => {
@@ -36,7 +39,7 @@ const getStatusBadge = (status) => {
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/30">
         <Clock className="w-3 h-3" />
-        <span>In Atelier Processing</span>
+        <span>In Processing</span>
       </span>
     );
   }
@@ -44,6 +47,43 @@ const getStatusBadge = (status) => {
     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase bg-amber-500/10 text-amber-300 border border-amber-500/30">
       <Sparkles className="w-3 h-3" />
       <span>{status || 'Order Confirmed'}</span>
+    </span>
+  );
+};
+
+const getPaymentBadge = (order) => {
+  const status = order.paymentStatus || 'pending';
+  if (status === 'paid') {
+    return (
+      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+        Paid (Verified)
+      </span>
+    );
+  }
+  if (status === 'pending_verification') {
+    return (
+      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-amber-500/10 text-amber-300 border border-amber-500/20">
+        Verification Pending
+      </span>
+    );
+  }
+  if (status === 'rejected') {
+    return (
+      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-rose-500/10 text-rose-400 border border-rose-500/20">
+        Payment Rejected
+      </span>
+    );
+  }
+  if (status === 'cash_on_delivery' || order.paymentMethod === 'COD') {
+    return (
+      <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-slate-800 text-slate-300 border border-slate-700">
+        Cash on Delivery
+      </span>
+    );
+  }
+  return (
+    <span className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase bg-amber-500/10 text-amber-400 border border-amber-500/20">
+      Awaiting Payment
     </span>
   );
 };
@@ -122,6 +162,8 @@ export const OrdersPage = () => {
               year: 'numeric'
             });
 
+            const needsPayment = order.paymentMethod === 'UPI' && (order.paymentStatus === 'pending' || order.paymentStatus === 'rejected');
+
             return (
               <div
                 key={order._id}
@@ -134,7 +176,7 @@ export const OrdersPage = () => {
                     <p className="text-sm font-bold text-white font-mono">{order.orderNumber}</p>
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-slate-400">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-400">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="w-4 h-4 text-amber-400" />
                       <span>{dateStr}</span>
@@ -145,6 +187,7 @@ export const OrdersPage = () => {
                       <span className="uppercase">{order.paymentMethod}</span>
                     </div>
 
+                    {getPaymentBadge(order)}
                     {getStatusBadge(order.orderStatus)}
                   </div>
                 </div>
@@ -181,22 +224,33 @@ export const OrdersPage = () => {
                     </div>
                   </div>
 
-                  {/* Price & View Details */}
+                  {/* Price & Actions */}
                   <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-3 shrink-0 pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-800">
                     <div className="text-left sm:text-right">
                       <span className="text-[10px] text-slate-400 block">Total Acquisition</span>
-                      <span className="text-xl font-bold text-amber-400">
+                      <span className="text-xl font-bold text-amber-400 font-serif">
                         ₹{order.totalAmount?.toLocaleString('en-IN')}
                       </span>
                     </div>
 
-                    <Link
-                      to={`/orders/${order.orderNumber || order._id}`}
-                      className="py-2.5 px-5 rounded-xl gold-gradient-btn text-xs font-bold flex items-center gap-1.5 shadow-md"
-                    >
-                      <span>View Details</span>
-                      <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
+                    <div className="flex items-center gap-2">
+                      {needsPayment && (
+                        <Link
+                          to={`/payment/${order.orderNumber || order._id}`}
+                          className="py-2.5 px-4 rounded-xl gold-gradient-btn text-xs font-bold flex items-center gap-1.5 shadow-md"
+                        >
+                          <QrCode className="w-3.5 h-3.5" />
+                          <span>Pay via UPI</span>
+                        </Link>
+                      )}
+                      <Link
+                        to={`/orders/${order.orderNumber || order._id}`}
+                        className="py-2.5 px-4 rounded-xl glass-panel border border-slate-700 text-xs font-semibold text-slate-200 hover:text-white flex items-center gap-1.5"
+                      >
+                        <span>Details</span>
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
                   </div>
                 </div>
 

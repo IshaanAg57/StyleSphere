@@ -16,7 +16,9 @@ import {
   AlertCircle,
   Truck,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  QrCode,
+  Smartphone
 } from 'lucide-react';
 
 export const CheckoutPage = () => {
@@ -32,7 +34,7 @@ export const CheckoutPage = () => {
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressId, setSelectedAddressId] = useState('');
   const [showAddAddressForm, setShowAddAddressForm] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('COD');
+  const [paymentMethod, setPaymentMethod] = useState('UPI');
   const [formError, setFormError] = useState('');
 
   // New Address Form State
@@ -125,7 +127,11 @@ export const CheckoutPage = () => {
       if (createOrderAsync.fulfilled.match(actionResult)) {
         const createdOrder = actionResult.payload;
         dispatch(clearCart());
-        navigate(`/order-success/${createdOrder._id || createdOrder.orderNumber}`);
+        if (paymentMethod === 'UPI') {
+          navigate(`/payment/${createdOrder._id || createdOrder.orderNumber}`);
+        } else {
+          navigate(`/order-success/${createdOrder._id || createdOrder.orderNumber}`);
+        }
       } else {
         setFormError(actionResult.payload || 'Failed to complete acquisition');
       }
@@ -359,50 +365,59 @@ export const CheckoutPage = () => {
               </div>
 
               <div className="space-y-3">
-                {/* Cash on Delivery (Active) */}
+                {/* Custom UPI Payment (Primary) */}
                 <div
-                  onClick={() => setPaymentMethod('COD')}
-                  className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
-                    paymentMethod === 'COD'
-                      ? 'border-amber-400 bg-amber-500/5 shadow-md shadow-amber-500/10'
+                  onClick={() => setPaymentMethod('UPI')}
+                  className={`p-5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
+                    paymentMethod === 'UPI'
+                      ? 'border-amber-400 bg-amber-500/10 shadow-lg shadow-amber-500/10'
                       : 'border-slate-800 bg-slate-900/40 hover:border-slate-700'
                   }`}
                 >
-                  <div className="flex items-center gap-3">
-                    <Banknote className="w-5 h-5 text-amber-400" />
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-400">
+                      <QrCode className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-white block">
+                          Instant UPI Settlement (Scan & Pay)
+                        </span>
+                        <span className="text-[9px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                          Recommended
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-slate-300">
+                        Google Pay • PhonePe • Paytm • BHIM • Direct Mobile Deep Linking
+                      </span>
+                    </div>
+                  </div>
+                  {paymentMethod === 'UPI' && <CheckCircle2 className="w-5 h-5 text-amber-400" />}
+                </div>
+
+                {/* Cash on Delivery */}
+                <div
+                  onClick={() => setPaymentMethod('COD')}
+                  className={`p-5 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
+                    paymentMethod === 'COD'
+                      ? 'border-amber-400 bg-amber-500/10 shadow-lg shadow-amber-500/10'
+                      : 'border-slate-800 bg-slate-900/40 hover:border-slate-700'
+                  }`}
+                >
+                  <div className="flex items-center gap-4">
+                    <div className="p-2.5 rounded-xl bg-slate-800 border border-slate-700 text-slate-300">
+                      <Banknote className="w-6 h-6 text-amber-400" />
+                    </div>
                     <div>
                       <span className="text-xs font-bold text-white block">
                         Cash on Delivery (White-Glove Courier)
                       </span>
-                      <span className="text-[10px] text-slate-400">
+                      <span className="text-[11px] text-slate-400">
                         Pay upon physical inspection & receipt of your couture piece
                       </span>
                     </div>
                   </div>
                   {paymentMethod === 'COD' && <CheckCircle2 className="w-5 h-5 text-amber-400" />}
-                </div>
-
-                {/* Credit / Debit Card (Ready Placeholder) */}
-                <div
-                  onClick={() => setPaymentMethod('Card')}
-                  className={`p-4 rounded-2xl border cursor-pointer transition-all flex items-center justify-between ${
-                    paymentMethod === 'Card'
-                      ? 'border-amber-400 bg-amber-500/5 shadow-md shadow-amber-500/10'
-                      : 'border-slate-800 bg-slate-900/40 hover:border-slate-700'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <CreditCard className="w-5 h-5 text-amber-400" />
-                    <div>
-                      <span className="text-xs font-bold text-white block">
-                        Luxury Concierge Card (Visa / MasterCard / Amex)
-                      </span>
-                      <span className="text-[10px] text-slate-400">
-                        256-Bit Encrypted Secure Transaction Gateway
-                      </span>
-                    </div>
-                  </div>
-                  {paymentMethod === 'Card' && <CheckCircle2 className="w-5 h-5 text-amber-400" />}
                 </div>
               </div>
             </div>
