@@ -3,16 +3,44 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
 const addressSchema = new mongoose.Schema({
-  fullName: { type: String, required: true, trim: true },
-  phone: { type: String, required: true, trim: true },
+  fullName: { type: String, required: [true, 'Full name is required'], trim: true },
+  phone: { type: String, required: [true, 'Phone number is required'], trim: true },
   email: { type: String, trim: true },
-  street: { type: String, required: true, trim: true },
-  city: { type: String, required: true, trim: true },
-  state: { type: String, required: true, trim: true },
-  pincode: { type: String, required: true, trim: true },
+  addressLine1: { type: String, trim: true },
+  addressLine2: { type: String, trim: true, default: '' },
+  street: { type: String, trim: true },
+  city: { type: String, required: [true, 'City is required'], trim: true },
+  state: { type: String, required: [true, 'State is required'], trim: true },
+  postalCode: { type: String, trim: true },
+  pincode: { type: String, trim: true },
   country: { type: String, default: 'India', trim: true },
   isDefault: { type: Boolean, default: false }
-}, { _id: true });
+}, { _id: true, timestamps: true });
+
+// Pre-save normalizer for address field compatibility
+addressSchema.pre('validate', function (next) {
+  if (this.addressLine1 && !this.street) {
+    this.street = this.addressLine1;
+  } else if (this.street && !this.addressLine1) {
+    this.addressLine1 = this.street;
+  }
+
+  if (this.postalCode && !this.pincode) {
+    this.pincode = this.postalCode;
+  } else if (this.pincode && !this.postalCode) {
+    this.postalCode = this.pincode;
+  }
+
+  if (!this.street && !this.addressLine1) {
+    this.street = 'Standard Delivery Address';
+    this.addressLine1 = 'Standard Delivery Address';
+  }
+  if (!this.pincode && !this.postalCode) {
+    this.pincode = '560001';
+    this.postalCode = '560001';
+  }
+  next();
+});
 
 const userSchema = new mongoose.Schema(
   {

@@ -3,6 +3,10 @@ import healthRoutes from './healthRoutes.js';
 import authRoutes from './authRoutes.js';
 import productRoutes from './productRoutes.js';
 import categoryRoutes from './categoryRoutes.js';
+import cartRoutes from './cartRoutes.js';
+import wishlistRoutes from './wishlistRoutes.js';
+import addressRoutes from './addressRoutes.js';
+import orderRoutes from './orderRoutes.js';
 
 const router = express.Router();
 
@@ -11,6 +15,10 @@ router.use('/health', healthRoutes);
 router.use('/auth', authRoutes);
 router.use('/products', productRoutes);
 router.use('/categories', categoryRoutes);
+router.use('/cart', cartRoutes);
+router.use('/wishlist', wishlistRoutes);
+router.use('/addresses', addressRoutes);
+router.use('/orders', orderRoutes);
 
 // Root /api endpoint information
 router.get('/', (req, res) => {
@@ -36,12 +44,29 @@ router.get('/', (req, res) => {
         list: 'GET /api/categories',
         details: 'GET /api/categories/:slug'
       },
-      cart: '/api/cart',
-      wishlist: '/api/wishlist',
-      orders: '/api/orders',
-      reviews: '/api/reviews',
-      payments: '/api/payments',
-      admin: '/api/admin'
+      cart: {
+        get: 'GET /api/cart (Protected)',
+        add: 'POST /api/cart (Protected)',
+        updateItem: 'PATCH /api/cart/:itemId (Protected)',
+        removeItem: 'DELETE /api/cart/:itemId (Protected)',
+        clear: 'DELETE /api/cart (Protected)'
+      },
+      wishlist: {
+        get: 'GET /api/wishlist (Protected)',
+        add: 'POST /api/wishlist/:productId (Protected)',
+        remove: 'DELETE /api/wishlist/:productId (Protected)'
+      },
+      addresses: {
+        list: 'GET /api/addresses (Protected)',
+        add: 'POST /api/addresses (Protected)',
+        update: 'PATCH /api/addresses/:addressId (Protected)',
+        delete: 'DELETE /api/addresses/:addressId (Protected)'
+      },
+      orders: {
+        create: 'POST /api/orders (Protected)',
+        list: 'GET /api/orders (Protected)',
+        details: 'GET /api/orders/:orderId (Protected)'
+      }
     }
   });
 });
